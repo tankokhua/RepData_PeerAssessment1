@@ -2,18 +2,58 @@
 
 
 ## Loading and preprocessing the data
-
+```{r}
+dt <- read.csv("activity.csv")
+library(reshape2)
+dt_melt <- melt(dt, id=c("date", "interval"), meas.vars=c("steps"))
+```
 
 
 ## What is mean total number of steps taken per day?
+```{r}
+dt_total<-dcast(dt_melt, date~variable, sum)
+hist(dt_total$steps, main="Histogram of total steps for each day", xlab="Total Steps")
 
-
+dt_mean <-dcast(dt_melt, date~variable, mean)
+dt_median <-dcast(dt_melt, date~variable, median, fill=0)
+data.frame(date=dt_mean$date, mean=dt_mean$steps, median=dt_median$steps)
+```
 
 ## What is the average daily activity pattern?
+```{r}
+dt_mean <-dcast(dt_melt, interval~variable, mean, na.rm=TRUE)
+plot(dt_mean$interval, dt_mean$steps, type='l', xlab="Interval", ylab="Mean Steps")
 
-
-
+```
+Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps? **Interval 835**.
 ## Imputing missing values
+
+```{r}
+# No. of rows with NA
+length(dt[is.na(dt$steps),][,1])
+
+#dt_mean <-dcast(dt_melt, date~variable, mean)
+dt2 <- read.csv("activity.csv")
+
+# Replacing NAs with the mean number of steps of the interval for all days.
+for (x in 1:length(dt2[,1])) {
+  interval <- dt2[x,3]
+  if (is.na(dt2[x,1])) { 
+    interval_mean <- dt_mean[dt_mean$interval==interval,][2]
+    dt2[x,1] <- interval_mean
+  }
+}
+
+dt_melt2 <- melt(dt2, id=c("date", "interval"), meas.vars=c("steps"))
+dt_total2<-dcast(dt_melt2, date~variable, sum)
+par(mfrow=c(1,2))
+hist(dt_total$steps, main="With NA", xlab="Total Steps")
+hist(dt_total2$steps, main="Imput?ing NA", xlab="Total Steps")
+
+dt_mean2 <-dcast(dt_melt2, date~variable, mean)
+dt_median2 <-dcast(dt_melt2, date~variable, median, fill=0)
+data.frame(date=dt_mean2$date, mean=dt_mean2$steps, median=dt_median2$steps)
+```
 
 
 
